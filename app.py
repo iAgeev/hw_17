@@ -1,4 +1,5 @@
 # app.py
+import json
 
 from flask import Flask, request
 from flask_restx import Api, Resource
@@ -9,6 +10,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_AS_ASCII'] = False
+
+app.url_map.strict_slashes = False
+
 db = SQLAlchemy(app)
 
 api = Api(app)
@@ -38,8 +42,9 @@ class MovieSchema(Schema):
     trailer = fields.Str()
     year = fields.Int()
     rating = fields.Float()
-    director_id = fields.Int()
     genre_id = fields.Int()
+    director_id = fields.Int()
+
 
 
 class Director(db.Model):
@@ -106,6 +111,24 @@ class MovieView(Resource):
         movie = Movie.query.get(uid)
         return movie_schema.dump(movie), 200
 
+    def put(self, uid):
+
+        update_movie = db.session.query(Movie).filter(Movie.id == uid).update(request.json)
+
+        if update_movie != 1:
+            return "", 404
+
+        # movie.title = new_movie.title
+        # movie.description = new_movie["description"]
+        # movie.trailer = new_movie["trailer"]
+        # movie.year = new_movie["year"]
+        # movie.rating = new_movie["rating"]
+        # movie.genre_id = new_movie["genre_id"]
+        # movie.director_id = new_movie["director_id"]
+        #
+        # db.session.add(movie)
+        # db.session.commit()
+        return "The data has been updated", 201
 
 @ns_director.route('/')
 class DirectorsView(Resource):
@@ -135,6 +158,7 @@ class GenreView(Resource):
     def get(self, uid):
         genre = Genre.query.get(uid)
         return genre_schema.dump(genre), 200
+
 
 
 if __name__ == '__main__':
